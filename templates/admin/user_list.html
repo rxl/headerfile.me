@@ -1,0 +1,28 @@
+{% extends "admin/base.html" %}
+
+{% block content %}
+  <table class="table table-bordered table-striped">
+    <colgroup>
+      <col class="span2">
+      <col class="span2">
+      <col class="span1">
+      <col class="span3">
+    </colgroup>
+    <thead>
+      <th>Name</th>
+      <th>Email</th>
+      <th>Created</th>
+      <th>Actions</th>
+    </thead>
+    <tbody>
+    {% for user in users %}
+      <tr>
+        <th><a href="{{ url_for('admin.user_edit', username=user.username) }}">{{ user.name }}</a></th>
+        <td>{{ user.email }}</td>
+        <td>{{ user.created_at.strftime('%Y-%m-%d') }}</td>
+        <td><a href="{{ url_for("admin.user_edit", username=user.username) }}" class="btn primary">Edit</a> <a href="{{ url_for("admin.user_delete", username=user.username) }}" class="btn primary">Delete</a></td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+{% endblock %}

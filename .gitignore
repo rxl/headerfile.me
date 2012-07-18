@@ -2,3 +2,4 @@
 *~
 ignore
 venv
+.DS_Store

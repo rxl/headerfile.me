@@ -1,28 +1,35 @@
 {% extends "base.html" %}
 
-{%- block topbar -%}
-<div class="topbar" data-dropdown="dropdown">
-  <div class="fill">
-    <div class="container">
-      <h2>
-           <a href="{{ url_for('admin.index') }}" class="brand">My Tumblelog Admin</a>
-      </h2>
-      <ul class="nav secondary-nav">
-        <li class="menu">
-          <a href="#" class="menu">Create new</a>
-          <ul class="menu-dropdown">
-            {% for type in ('post', 'video', 'image', 'quote') %}
-                <li><a href="{{ url_for("admin.create", type=type) }}">{{ type|title }}</a></li>
-            {% endfor %}
-          </ul>
-        </li>
-      </ul>
-    </div>
-  </div>
-</div>
-{%- endblock -%}
+{% block head %}
+  {{ super() }}
 
-{% block js_footer %}
-  <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
-  <script src="http://twitter.github.com/bootstrap/1.4.0/bootstrap-dropdown.js"></script>
 {% endblock %}
+
+    {% block navbar %}
+    <div class="navbar navbar-fixed-top">
+        <div class="navbar-inner">
+            <div class="container">
+              <a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+              </a>
+              <a class="brand" href="/admin">HeaderFile.me Admin</a>
+              <div class="nav-collapse">
+                <ul class="nav">
+                  <li><a href="/admin/users">Users</a></li>
+                </ul>
+                  <ul class="nav secondary-nav pull-right">
+                            <li><a href="{{ url_for("admin.user_create") }}">{{ 'user'|title }}</a></li>
+                        {% for type in ('post', 'video', 'image', 'quote') %}
+                            <li><a href="{{ url_for("admin.create", type=type) }}">{{ type|title }}</a></li>
+                        {% endfor %}
+                    </li>
+                  </ul>
+              </div><!--/.nav-collapse -->
+            </div>
+          </div>
+    </div>
+    {% endblock %}
+
+

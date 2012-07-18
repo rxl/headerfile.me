@@ -2,15 +2,15 @@
 
 {% block content %}
   <h2>
-    Delete Post
+    Delete User
   </h2>
 
   <form action="?{{ request.query_string }}" method="post">
     <div class="actions">
-      <h3>{{ post.title }}</h3>
+      <h3>{{ user.name }}</h3>
       <p>Are you sure you want to delete?</p>
-      <input type="submit" class="btn primary" value="delete">
-      <a href="{{ url_for("admin.index") }}" class="btn secondary">Cancel</a>
+      <input type="submit" class="btn primary" value="Delete">
+      <a href="{{ url_for("admin.user_index") }}" class="btn secondary">Cancel</a>
     </div>
   </form>
 {% endblock %}

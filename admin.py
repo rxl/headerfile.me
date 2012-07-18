@@ -3,43 +3,120 @@ from flask.views import MethodView
 
 from flask.ext.mongoengine.wtf import model_form
 
-from tumblelog.auth import requires_auth
-from tumblelog.models import Post, Comment
+from headerfile.auth import requires_auth
+from headerfile.models import *
 
-from tumblelog.models import Post, BlogPost, Video, Image, Quote, Comment
+#------------------------
+# admin
+#------------------------
 
 admin = Blueprint('admin', __name__, template_folder='templates')
 
+#------------------------
+# users
+#------------------------
 
-class List(MethodView):
+class UserAdminListView(MethodView):
+    decorators = [requires_auth]
+    cls = User
+
+    def get(self):
+        users = self.cls.objects.all()
+        return render_template('admin/user_list.html', users=users)
+
+class UserAdminDeleteView(MethodView):
+    decorators = [requires_auth]
+
+    def get(self, username):
+        user = None
+        if username:
+            user = User.objects.get_or_404(username=username)
+        else:
+            user = None
+        return render_template('admin/user_delete.html', user=user)
+
+    def post(self, username):
+        user = User.objects.get_or_404(username=username)
+        user.delete()
+        users = User.objects.all()
+        users.delete()
+        return redirect(url_for('admin.user_index'))
+
+class UserAdminDetailsView(MethodView):
+    decorators = [requires_auth]
+
+    def get_context(self, username=None):
+        form_cls = model_form(User, exclude=('created_at', 'websites'))
+
+        if username:
+            user = User.objects.get_or_404(username=username)
+            if request.method == 'POST':
+                form = form_cls(request.form, inital=user._data)
+            else:
+                form = form_cls(obj=user)
+        else:
+            user = User()
+            form = form_cls(request.form)
+
+        context = {
+            "user": user,
+            "form": form,
+            "create": username is None
+        }
+        return context
+
+    def get(self, username):
+        context = self.get_context(username)
+        return render_template('admin/user_details.html', **context)
+
+    def post(self, username):
+        context = self.get_context(username)
+        form = context.get('form')
+
+        if form.validate():
+            user = context.get('user')
+            form.populate_obj(user)
+            user.save()
+
+            return redirect(url_for('admin.user_index'))
+        return render_template('admin/user_details.html', **context)
+
+# Register the urls
+admin.add_url_rule('/admin/', view_func=UserAdminListView.as_view('user_index'))
+admin.add_url_rule('/admin/users/', view_func=UserAdminListView.as_view('user_index'))
+admin.add_url_rule('/admin/users/create/', defaults={'username': None}, view_func=UserAdminDetailsView.as_view('user_create'))
+admin.add_url_rule('/admin/users/<username>/', view_func=UserAdminDetailsView.as_view('user_edit'))
+admin.add_url_rule('/admin/users/<username>/delete/', view_func=UserAdminDeleteView.as_view('user_delete'))
+
+#------------------------
+# posts
+#------------------------
+
+class PostAdminListView(MethodView):
     decorators = [requires_auth]
     cls = Post
 
     def get(self):
         posts = self.cls.objects.all()
-        return render_template('admin/list.html', posts=posts)
+        return render_template('admin/post_list.html', posts=posts)
 
-class Delete(MethodView):
-	decorators = [requires_auth]
+class PostAdminDeleteView(MethodView):
+    decorators = [requires_auth]
 
-	def get(self, slug):
-		post = None
-		if slug:
-			post = Post.objects.get_or_404(slug=slug)
-			print "---there is a slug"
-		else:
-			post = None
-			print "---there is no slug"
-		return render_template('admin/delete.html', post=post)
+    def get(self, slug):
+        post = None
+        if slug:
+            post = Post.objects.get_or_404(slug=slug)
+        else:
+            post = None
+        return render_template('admin/post_delete.html', post=post)
 
-	def post(self, slug):
-		post = Post.objects.get_or_404(slug=slug)
-		posts = Post.objects.all()
-		post.delete()
-		posts.delete()
-		return redirect(url_for('admin.index'))
+    def post(self, slug):
+        post = Post.objects.get_or_404(slug=slug)
+        post.delete()
+        return redirect(url_for('admin.index'))
 
-class Detail(MethodView):
+class PostAdminDetailsView(MethodView):
 
     decorators = [requires_auth]
     # Map post types to models
@@ -76,7 +153,7 @@ class Detail(MethodView):
 
     def get(self, slug):
         context = self.get_context(slug)
-        return render_template('admin/detail.html', **context)
+        return render_template('admin/post_details.html', **context)
 
     def post(self, slug):
         context = self.get_context(slug)
@@ -88,11 +165,11 @@ class Detail(MethodView):
             post.save()
 
             return redirect(url_for('admin.index'))
-        return render_template('admin/detail.html', **context)
+        return render_template('admin/post_details.html', **context)
 
 # Register the urls
-admin.add_url_rule('/admin/', view_func=List.as_view('index'))
-admin.add_url_rule('/admin/create/', defaults={'slug': None}, view_func=Detail.as_view('create'))
-admin.add_url_rule('/admin/<slug>/', view_func=Detail.as_view('edit'))
-admin.add_url_rule('/admin/<slug>/delete/', view_func=Delete.as_view('delete'))
+admin.add_url_rule('/admin/posts/', view_func=PostAdminListView.as_view('index'))
+admin.add_url_rule('/admin/posts/create/', defaults={'slug': None}, view_func=PostAdminDetailsView.as_view('create'))
+admin.add_url_rule('/admin/posts/<slug>/', view_func=PostAdminDetailsView.as_view('edit'))
+admin.add_url_rule('/admin/posts/<slug>/delete/', view_func=PostAdminDeleteView.as_view('delete'))
 
