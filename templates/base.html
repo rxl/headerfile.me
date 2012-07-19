@@ -61,8 +61,16 @@
           {% endblock %}
 
           {% for message in get_flashed_messages() %}
-            <div class=flash>{{ message }}</div>
+            <div class="alert alert-info">{{ message }}</div>
           {% endfor %}
+
+          {% if success %}
+            <div class="alert alert-success">{{ success }}</div>
+          {% endif %}
+
+          {% if error %}
+            <div class="alert alert-error">{{ error }}</div>
+          {% endif %}
 
           {% block content %}
           {% endblock %}

@@ -1,39 +1,63 @@
 {% extends "base.html" %}
 {% import "_forms.html" as forms %}
 
+{% block page_header %}
+  <h2>Edit User</h2>
+{% endblock %}
+
 {% block content %}
-  <h2>
-      Edit User
-  </h2>
 
-  <form action="?{{ request.query_string }}" method="post">
-    {{ forms.render(form) }}
+  <form name="edit_profile" action="?{{ request.query_string }}" method="post">
+    <fieldset>
+      {{ forms.render(form) }}
 
-    <div class="clearfix">
-      <label for="industries[]">Industries</label>
-      <ul class="twocol">
-      {% for industry_choice in industry_choices %}
-        <li>
-          <input {% if user.industries|contains_choice(industry_choice[0]) %} checked="checked" {% endif %} type="checkbox" name="industries[]" value="{{ industry_choice[0] }}" /> {{ industry_choice[1] }}<br />
-        </li>
-      {% endfor %}
-      </ul>
-    </div>
+      <div class="clearfix">
+        <label for="industries">Industries (choose up to 3)</label>
+        <ul class="twocol">
+        {% for industry_choice in industry_choices %}
+          <li>
+            <input {% if user.industries|contains_choice(industry_choice[0]) %} checked="checked" {% endif %} type="checkbox" name="industries" value="{{ industry_choice[0] }}" /> {{ industry_choice[1] }}<br />
+          </li>
+        {% endfor %}
+        </ul>
+      </div>
 
-    <div class="clearfix">
-      <label for="technologies[]">Technologies</label>
-      <ul class="fourcol">
-      {% for technology_choice in technology_choices %}
-        <li>
-        <input {% if user.technologies|contains_choice(technology_choice[0]) %} checked="checked" {% endif %} type="checkbox" name="technologies[]" value="{{ technology_choice[0] }}" /> {{ technology_choice[1] }}<br />
-        </li>
-      {% endfor %}
-      </ul>
-    </div>
+      <div class="clearfix">
+        <label for="technologies">Technologies (choose up to 3)</label>
+        <ul class="twocol">
+        {% for technology_choice in technology_choices %}
+          <li>
+          <input {% if user.technologies|contains_choice(technology_choice[0]) %} checked="checked" {% endif %} type="checkbox" name="technologies" value="{{ technology_choice[0] }}" /> {{ technology_choice[1] }}<br />
+          </li>
+        {% endfor %}
+        </ul>
+      </div>
+    </fieldset>
 
     <div class="actions">
       <input type="submit" class="btn primary" value="Save">
       <a href="{{ url_for("users.details", username=user.username) }}" class="btn secondary">Cancel</a>
     </div>
   </form>
+{% endblock %}
+
+{% block js_footer %}
+<script type="text/javascript">
+  function limit_checkboxes($checkboxes_to_limit, limit) {
+    $checkboxes_to_limit.live("change", function() {
+        if($checkboxes_to_limit.filter(":checked").length >= limit) {
+            $checkboxes_to_limit.not(":checked").attr("disabled","disabled");
+        }
+        else {
+            $checkboxes_to_limit.removeAttr("disabled");
+        }
+    });
+  }
+
+  var $checkboxes_to_limit = $(document).find("input:checkbox[name=technologies]");
+  limit_checkboxes($checkboxes_to_limit, 3);
+  var $checkboxes_to_limit = $(document).find("input:checkbox[name=industries]");
+  limit_checkboxes($checkboxes_to_limit, 3);
+
+</script>
 {% endblock %}

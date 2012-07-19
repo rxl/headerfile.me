@@ -4,18 +4,22 @@
 {% block page_header %}
   <div class="page-header">
     <h1>{{ user.name }}</h1>
-    <h3><a href="/search?university={{ user.university }}" target="_blank" class="">{{ user.university }}</a></h3>
+    <h3><a href="/pages/{{ university_choices|match_tuple_front_to_back(user.university) }}" target="_blank" class="">{{ user.university }}</a></h3>
   </div>
+
 {% endblock %}
 
 {% block content %}
-	
-	<div>
-		<a href="mailto:{{ user.email }}" class="btn">Contact</a>
-	</div>
 
-	<hr>
-
+	{% if user.facebook %}
+		<a href="{{ user.facebook }}" target="_blank"><img src="{{ url_for('static', filename='img/facebook.png') }}" /></a>
+	{% endif %}
+	{% if user.twitter %}
+		<a href="{{ user.twitter }}" target="_blank" class="social-webpages"><img src="{{ url_for('static', filename='img/twitter.png') }}" /></a>
+	{% endif %}
+	{% if user.linkedin %}
+		<a href="{{ user.linkedin }}" target="_blank"><img src="{{ url_for('static', filename='img/linkedin.png') }}" /></a>
+	{% endif %}
 	{% if user.github %}
 		<a href="{{ user.github }}" target="_blank" class="btn btn-inverse">github</a>
 	{% endif %}
@@ -25,14 +29,8 @@
 	{% if user.stackoverflow %}
 		<a href="{{ user.stackoverflow }}" target="_blank" class="btn btn-inverse">stackoverflow</a>
 	{% endif %}
-	{% if user.facebook %}
-		<a href="{{ user.facebook }}" target="_blank"><img src="{{ url_for('static', filename='img/facebook.png') }}" /></a>
-	{% endif %}
-	{% if user.twitter %}
-		<a href="{{ user.twitter }}" target="_blank" class="social-webpages"><img src="{{ url_for('static', filename='img/twitter.png') }}" /></a>
-	{% endif %}
-	{% if user.linkedin %}
-		<a href="{{ user.linkedin }}" target="_blank"><img src="{{ url_for('static', filename='img/linkedin.png') }}" /></a>
+	{% if user.email %}
+		<a href="mailto:{{ user.email }}" class="btn btn-inverse">Contact</a>
 	{% endif %}
 
 	<hr>
@@ -46,7 +44,7 @@
 		<h3>Areas of Interest</h3>
 		<p>
 		{% for industry in user.industries %}
-			<a href="/search?industry={{ industry }}" class="btn btn-mini">{{ industry }}</a>
+			<a href="/pages/{{ industry }}" class="btn btn-mini">{{ industry }}</a>
 		{% endfor %}
 		</p>
 	{% endif %}
@@ -55,14 +53,9 @@
 		<h3>Technologies</h3>
 		<p>
 		{% for technology in user.technologies %}
-			<a href="/search?technology={{ technology }}" class="btn btn-mini">{{ technology }}</a>
+			<a href="/pages/{{ technology }}" class="btn btn-mini">{{ technology }}</a>
 		{% endfor %}
 		</p>
-	{% endif %}
-
-	{% if user.work %}
-		<h3>Work Experience</h3>
-		<p>{{ user.work|nl2br }}</p>
 	{% endif %}
 
 	<a href="{{ url_for("users.edit", username=user.username) }}" class="btn btn-primary">Edit Profile</a>

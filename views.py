@@ -27,8 +27,25 @@ def contains_choice(this, choice):
             return True
     return False
 
+def match_tuple_front_to_back(choices, front):
+    choices_dict = dict(choices)
+    print choices_dict
+    print front
+    if front in choices_dict:
+        return choices_dict[front]
+
+def match_tuple_back_to_front(choices, back):
+    choices_dict = dict(choices)
+    print choices_dict
+    print back
+    choices_dict_key_val_reversed = dict((y,x) for x,y in choices_dict.iteritems())
+    if back in choices_dict_key_val_reversed:
+        return choices_dict_key_val_reversed[back]
+
 filters.FILTERS['contains_choice'] = contains_choice
 filters.FILTERS['nl2br'] = nl2br
+filters.FILTERS['match_tuple_front_to_back'] = match_tuple_front_to_back
+filters.FILTERS['match_tuple_back_to_front'] = match_tuple_back_to_front
 
 #------------------------
 # users
@@ -60,14 +77,12 @@ class UserDetailsView(MethodView):
             except:
                 user.technologies = None
 
-        return render_template('users/details.html', user=user)
+        return render_template('users/details.html', user=user, university_choices=UNIVERSITIES)
 
 class UserEditView(MethodView):
     #decorators = [requires_auth] # only profile's owner can edit profile
 
-    def get_context(self, username=None):
-        form_cls = model_form(User, exclude=('created_at', 'websites'))
-
+    def get_context(self, form_cls, username=None):
         if username:
             user = User.objects.get_or_404(username=username)
             if request.method == 'POST':
@@ -88,30 +103,52 @@ class UserEditView(MethodView):
         return context
 
     def get(self, username):
-        context = self.get_context(username)
+        form_cls = model_form(User, exclude=('created_at','email','password','username', 'websites', 'technologies', 'industries', 'work'))
+        context = self.get_context(form_cls, username)
         if context.get('user') is not None:
             return render_template('users/edit.html', **context)
         return render_template('404.html'), 404
 
+    def remove_empty_data_from_form(self, form, form_field, user):
+        if form_field in form:
+            print len(form[form_field].raw_data[0])
+            if len(form[form_field].raw_data[0]) == 0:
+                setattr(user, form_field, None)
+                print "zero length"
+            else:
+                print "form field in form"
+        else:
+            print "form field not in form"
+            setattr(user, form_field, None)
+
     def post(self, username):
-        context = self.get_context(username)
+        form_cls = model_form(User, exclude=('created_at', 'websites', 'work','email','password','username'))
+        context = self.get_context(form_cls, username)
         form = context.get('form')
 
+        error = None
         if form.validate():
             user = context.get('user')
             form.populate_obj(user)
 
             if 'industries' in form:
-                industries = request.form.getlist('industries[]')
+                industries = request.form.getlist('industries')
                 user.industries = json.dumps(industries)
             if 'technologies' in form:
-                technologies = request.form.getlist('technologies[]')
+                technologies = request.form.getlist('technologies')
                 user.technologies = json.dumps(technologies)
 
-            user.save()
+            self.remove_empty_data_from_form(form, 'github', user)
+            self.remove_empty_data_from_form(form, 'blog', user)
+            self.remove_empty_data_from_form(form, 'facebook', user)
+            self.remove_empty_data_from_form(form, 'twitter', user)
+            self.remove_empty_data_from_form(form, 'linkedin', user)
+            self.remove_empty_data_from_form(form, 'stackoverflow', user)
+            self.remove_empty_data_from_form(form, 'topcoder', user)
 
+            user.save()
             return redirect(url_for('users.details', username=username))
-        return render_template('users/edit.html', **context)
+        return render_template('users/edit.html', error=error, **context)
 
 # Register the urls
 users.add_url_rule('/', view_func=HomeView.as_view('index'))
@@ -147,7 +184,7 @@ facebook = oauth.remote_app('facebook',
     authorize_url='https://www.facebook.com/dialog/oauth',
     consumer_key=FACEBOOK_APP_ID,
     consumer_secret=FACEBOOK_APP_SECRET,
-    request_token_params={'scope': 'email'}
+    request_token_params={'scope': ('email', 'user_events', 'read_stream')}
 )
 
 @twitter.tokengetter
@@ -162,30 +199,31 @@ class LoginView(MethodView):
     def get(self):
         return render_template('users/login.html')
 
-def pop_session_login():
-    session.pop('logged_in', None)
+def pop_twitter_login_session():
     # logout of twitter
     session.pop('twitter_token', None)
     session.pop('twitter_user', None)
-    # logout of facebook
+
+def pop_all_login_sessions():
+    session.pop('logged_in', None)
+    pop_twitter_login_session()
     session.pop('facebook_token', None)
 
 class FacebookLoginView(MethodView):
     def get(self):
-        #pop_session_login()
         return facebook.authorize(callback=url_for('users.facebook-authorized',
             next=request.args.get('next'),
             _external=True))
 
 class TwitterLoginView(MethodView):
     def get(self):
-        pop_session_login()
+        pop_twitter_login_session()
         return twitter.authorize(callback=url_for('users.oauth-authorized',
             next=request.args.get('next')))
 
 class LogoutView(MethodView):
     def get(self):
-        pop_session_login()
+        pop_all_login_sessions()
         return redirect(url_for('users.index'))
 
 class FacebookAuthorizedView(MethodView):
@@ -200,8 +238,15 @@ class FacebookAuthorizedView(MethodView):
         session['facebook_token'] = (resp['access_token'], '')
         
         me = facebook.get('/me')
+        print "\n-----ME-----\n"
         print me.data
         print me.data['id']
+
+        username = me.data['name']
+        facebook_link = me.data['link']
+        name = me.data['name']
+        email = me.data['email']
+
         flash('You were signed in as %s' % me.data['name'])
 
         return redirect(next_url)

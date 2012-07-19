@@ -7,85 +7,77 @@ from headerfile import db
 #------------------------
 
 TECHNOLOGIES=(
-('c','c'),
-('java','java'),
-('objective-c','objective-c'),
-('c++','c++'),
-('c#','c#'),
-('vb.net','vb.net'),
-('php','php'),
 ('python','python'),
-('perl','perl'),
-('ruby','ruby'),
 ('javascript','javascript'),
-('delphi','delphi'),
-('lisp','lisp'),
-('pascal','pascal'),
-('ada','ada'),
-('lua','lua'),
-('matlab','matlab'),
+('ruby','ruby'),
+('c','c'),
+('c#','c#'),
+('php','php'),
+('java','java'),
+('c++','c++'),
 ('haskell','haskell'),
-('erlang','erlang'),
-('scala','scala'),
-('ocaml','ocaml'),
-('scheme','scheme'),
-('assembly','assembly'),
-('actionscript','actionscript'),
-('sql','sql'),
+('clojure','clojure'),
 ('coffeescript','coffeescript'),
-('node.js','node.js'),
-('ios','ios'),
-('android','android'),
-('windows-phone','windows-phone'),
+('objective-c','objective-c'),
+('lisp','lisp'),
+('perl','perl'),
+('scala','scala'),
+('scheme','scheme'),
+('erlang','erlang'),
+('matlab','matlab')
 )
 
 INDUSTRIES = (
-('Agriculture', 'Agriculture'), 
-('Computing & Storage Infrastructure', 'Computing & Storage Infrastructure'), 
-('Consumer Internet & Media', 'Consumer Internet & Media'),
-('Education', 'Education'),
-('Emerging Markets', 'Emerging Markets'),
-('Energy/Cleantech', 'Energy/Cleantech'),
-('Enterprise Software & SaaS', 'Enterprise Software & SaaS'),
-('Financial Technology', 'Financial Technology'),
-('Hardware', 'Hardware'),
-('Healthcare & Biotech', 'Healthcare & Biotech'),
-('Mobile', 'Mobile'),
-('Networking Systems', 'Networking Systems'),
-('Retail Consumer', 'Retail Consumer'),
-('Security', 'Security'),
-('Semiconductors', 'Semiconductors'),
-('Technology Enabled Services', 'Technology Enabled Services')
+('advertising', 'advertising'), 
+('biotech-life-sciences', 'biotech-life-sciences'),
+('ecommerce-retail', 'ecommerce-retail'),
+('emerging-markets', 'emerging-markets'), 
+('energy-cleantech', 'energy-cleantech'), 
+('hardware', 'hardware'),  
+('education', 'education'), 
+('enterprise-software', 'enterprise-software'),
+('finance', 'finance'), 
+('gaming-entertainment', 'gaming-entertainment'),
+('health-wellness', 'health-wellness'), 
+('media-communications', 'media-communications'),
+('mobile', 'mobile'), 
+('saas', 'saas'),
+('search', 'search'), 
+('security', 'security'),
+('semiconductor', 'semiconductor'),
+('social-media', 'social-media')
 )
 
-UNIVERSITIES = (('', ''),
+UNIVERSITIES = (('Other', 'Other'),
     ('Princeton University', 'Princeton'),
     ('University of Pennsylvania', 'Penn'),
     ('Cornell University', 'Cornell'),
     ('Columbia University', 'Columbia'),
-    ('Harvard University', 'Harvard')
+    ('Harvard University', 'Harvard'),
+    ('Stanford University', 'Stanford'),
 )
 
 class User(db.DynamicDocument):
     created_at = db.DateTimeField(default=datetime.datetime.now, required=True)
-    email = db.EmailField(max_length=255, required=True)
+    email = db.EmailField(max_length=255, required=True, unique=True)
     password = db.StringField(max_length=255, required=True)
     name = db.StringField(max_length=255, required=True)
-    username = db.StringField(max_length=255, required=True)
+    username = db.StringField(max_length=255, required=True, unique=True)
     
     university = db.StringField(max_length=255, required=False, choices=UNIVERSITIES)
     industries = db.StringField(required=False)
     technologies = db.StringField(required=False)
 
-    github = db.StringField(max_length=255, required=False)
-    blog = db.StringField(max_length=255, required=False)
-    facebook = db.StringField(max_length=255, required=False) 
-    twitter = db.StringField(max_length=255, required=False)
-    linkedin = db.StringField(max_length=255, required=False)
-    stackoverflow = db.StringField(max_length=255, required=False)
-    topcoder = db.StringField(max_length=255, required=False)
-
     bio = db.StringField(required=False)
+
+    github = db.URLField(max_length=255, required=False, verify_exists=False)
+    blog = db.URLField(max_length=255, required=False, verify_exists=False)
+    facebook = db.URLField(max_length=255, required=False, verify_exists=False) 
+    twitter = db.URLField(max_length=255, required=False, verify_exists=False)
+    linkedin = db.URLField(max_length=255, required=False, verify_exists=False)
+    stackoverflow = db.URLField(max_length=255, required=False, verify_exists=False)
+    topcoder = db.URLField(max_length=255, required=False, verify_exists=False)
+
     work = db.StringField(required=False)
 
     websites = db.ListField(db.EmbeddedDocumentField('Website'))

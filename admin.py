@@ -6,6 +6,8 @@ from flask.ext.mongoengine.wtf import model_form
 from headerfile.auth import requires_auth
 from headerfile.models import *
 
+from flask import flash
+
 #------------------------
 # admin
 #------------------------
@@ -38,15 +40,13 @@ class UserAdminDeleteView(MethodView):
     def post(self, username):
         user = User.objects.get_or_404(username=username)
         user.delete()
-        users = User.objects.all()
-        users.delete()
         return redirect(url_for('admin.user_index'))
 
 class UserAdminDetailsView(MethodView):
     decorators = [requires_auth]
 
     def get_context(self, username=None):
-        form_cls = model_form(User, exclude=('created_at', 'websites'))
+        form_cls = model_form(User, exclude=('created_at', 'websites', 'github', 'blog','facebook','twitter','linkedin','stackoverflow','topcoder','work'))
 
         if username:
             user = User.objects.get_or_404(username=username)
@@ -73,13 +73,22 @@ class UserAdminDetailsView(MethodView):
         context = self.get_context(username)
         form = context.get('form')
 
+        error = None
         if form.validate():
             user = context.get('user')
             form.populate_obj(user)
-            user.save()
 
-            return redirect(url_for('admin.user_index'))
-        return render_template('admin/user_details.html', **context)
+            user_with_email = User.objects(email=user.email)
+            user_with_username = User.objects(username=user.username)
+
+            if len(user_with_email) != 0:
+                error = 'Sorry! A user with that email already exists! Try another one.'
+            elif len(user_with_username) != 0:
+                error = 'Sorry! A user with that username already exists! Try another one.'
+            else:
+                user.save()
+                return redirect(url_for('admin.user_index'))
+        return render_template('admin/user_details.html', error=error, **context)
 
 # Register the urls
 admin.add_url_rule('/admin/', view_func=UserAdminListView.as_view('user_index'))

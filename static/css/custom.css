@@ -5,7 +5,7 @@
 .add-entry dl   { font-weight: bold; }
 .flash          { background: #CEE5F5; padding: 0.5em;
                   border: 1px solid #AACBE2; }
-.error          { background: #F0D6D6; padding: 0.5em; }
+.flash-error          { background: #F0D6D6; padding: 0.5em; }
 
 .login-button {
     text-align: center;

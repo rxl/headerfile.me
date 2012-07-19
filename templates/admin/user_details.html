@@ -1,7 +1,7 @@
 {% extends "admin/base.html" %}
 {% import "_forms.html" as forms %}
 
-{% block content %}
+{% block page_header %}
   <h2>
     {% if create %}
       Add new User
@@ -9,7 +9,9 @@
       Edit User
     {% endif %}
   </h2>
+{% endblock %}
 
+{% block content %}
   <form action="?{{ request.query_string }}" method="post">
     {{ forms.render(form) }}
     <div class="actions">
